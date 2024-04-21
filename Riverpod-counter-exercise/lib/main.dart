@@ -1,92 +1,68 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// Define a provider for the counter state
-final counterProvider = StateNotifierProvider<CounterNotifier, int>((ref) {
-  return CounterNotifier();
-});
-
-class CounterNotifier extends StateNotifier<int> {
-  CounterNotifier() : super(0);
-
-  void increment() => state++;
-  void decrement() => state--;
-}
+final counterProvider = StateProvider<int>((ref) => 0);
 
 void main() {
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Riverpod Counter',
-      home: MyHomePage(),
+    return MaterialApp(
+      title: 'Flutter Riverpod Counter',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: CounterScreen(),
     );
   }
 }
 
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({Key? key}) : super(key: key);
-
+class CounterScreen extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final counterState = ref.watch(counterProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Riverpod Counter'),
+        title: Text('Counter App using Riverpod'),
       ),
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+          children: [
+            Text(
+              'Counter: ${counterState}',
+              style: TextStyle(fontSize: 24),
             ),
-            CounterText(),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    ref.read(counterProvider.notifier).decrement();
+                  },
+                  child: Text('Decrement'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.read(counterProvider.notifier).increment();
+                  },
+                  child: Text('Increment'),
+                ),
+              ],
+            ),
           ],
         ),
       ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: <Widget>[
-          FloatingActionButton(
-            onPressed: () {
-              context.read(counterProvider.notifier).decrement();
-            },
-            tooltip: 'Decrement',
-            child: const Icon(Icons.remove),
-          ),
-          const SizedBox(width: 16), // Adding spacing between buttons
-          FloatingActionButton(
-            onPressed: () {
-              context.read(counterProvider.notifier).increment();
-            },
-            tooltip: 'Increment',
-            child: const Icon(Icons.add),
-          ),
-        ],
-      ),
     );
   }
 }
 
-class CounterText extends HookWidget {
-  const CounterText({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final counter = useProvider(counterProvider.notifier);
-    return Text(
-      '$counter',
-      style: Theme.of(context).textTheme.headline6,
-    );
-  }
+extension CounterController on StateController<int> {
+  void increment() => state++;
+  void decrement() => state--;
 }
