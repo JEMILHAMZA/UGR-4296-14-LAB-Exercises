@@ -118,12 +118,8 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     if (state is PostsLoaded) {
       final updatedPosts = (state as PostsLoaded).posts.map((post) {
         if (post.id == event.post.id) {
-          // Create a new Post object with updated values:
-          return Post(
-            id: post.id,
-            title: event.post.title,
-            body: event.post.body,
-          );
+          // Update the post if IDs match
+          return event.post;
         } else {
           return post;
         }
@@ -149,7 +145,7 @@ class HomePage extends StatelessWidget {
     final postBloc = BlocProvider.of<PostBloc>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Posts'),
+        title: Text('CRUD using JASON API and Bloc'),
       ),
       body: BlocBuilder<PostBloc, PostState>(
         builder: (context, state) {
@@ -183,13 +179,19 @@ class HomePage extends StatelessWidget {
 
   Widget _buildInitialMessage(BuildContext context) {
     return Center(
-      child: Text('Press the + button to get some data'),
+      child: Text(
+        'Press the + button to get some data',
+        style: TextStyle(fontSize: 18),
+      ),
     );
   }
 
   Widget _buildEmptyMessage(BuildContext context) {
     return Center(
-      child: Text('No data available. Press the + button to fetch data'),
+      child: Text(
+        'No data available. Press the + button to fetch data',
+        style: TextStyle(fontSize: 18),
+      ),
     );
   }
 
@@ -198,20 +200,80 @@ class HomePage extends StatelessWidget {
       itemCount: posts.length,
       itemBuilder: (context, index) {
         final post = posts[index];
+        final TextEditingController titleController =
+            TextEditingController(text: post.title);
+        final TextEditingController bodyController =
+            TextEditingController(text: post.body);
+        // Create a copy of the original post for editing
+        Post editedPost = Post(id: post.id, title: post.title, body: post.body);
+
         return ListTile(
-          title: Text(post.title),
-          subtitle: Text(post.body),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 40,
+              ),
+              TextField(
+                controller: titleController,
+                decoration: InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Colors.blue), // Blue border color
+                  ),
+                ),
+                onChanged: (value) {
+                  // Update the edited post object
+                  editedPost.title = value;
+                },
+                style: TextStyle(
+                  // Add style to the TextField
+                  fontSize: 18, // Set desired font size
+                  fontWeight: FontWeight.bold, // Make the text bold
+                ),
+              ),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 16), // Add gap between title and body
+              TextField(
+                controller: bodyController,
+                decoration: InputDecoration(
+                  labelText: 'Body',
+                  border: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Colors.blue), // Blue border color
+                  ),
+                ),
+                onChanged: (value) {
+                  // Update the edited post object
+                  editedPost.body = value;
+                },
+              ),
+              Divider(),
+            ],
+          ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: Icon(Icons.edit),
+                icon: Icon(
+                  Icons.save,
+                  color: Colors.blue,
+                ),
                 onPressed: () {
-                  _editPost(context, post);
+                  // Dispatch the EditPost event with the edited post
+                  BlocProvider.of<PostBloc>(context).add(EditPost(editedPost));
                 },
               ),
               IconButton(
-                icon: Icon(Icons.delete),
+                icon: Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                ),
                 onPressed: () {
                   _deletePost(context, post);
                 },
@@ -223,80 +285,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  void _editPost(BuildContext context, Post post) {
-    final TextEditingController titleController =
-        TextEditingController(text: post.title);
-    final TextEditingController bodyController =
-        TextEditingController(text: post.body);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Edit Post'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleController,
-                decoration: InputDecoration(labelText: 'Title'),
-              ),
-              TextField(
-                controller: bodyController,
-                decoration: InputDecoration(labelText: 'Body'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                // Dispatch the EditPost event with the updated post
-                BlocProvider.of<PostBloc>(context).add(EditPost(Post(
-                  id: post.id,
-                  title: titleController.text,
-                  body: bodyController.text,
-                )));
-                Navigator.pop(context);
-              },
-              child: Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _deletePost(BuildContext context, Post post) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Delete Post'),
-          content: Text('Are you sure you want to delete this post?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                // Dispatch the DeletePost event with the post to be deleted
-                BlocProvider.of<PostBloc>(context).add(DeletePost(post));
-                Navigator.pop(context);
-              },
-              child: Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
+    BlocProvider.of<PostBloc>(context).add(DeletePost(post));
   }
 }
