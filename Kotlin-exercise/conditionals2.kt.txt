@@ -1,0 +1,24 @@
+fun main() {
+    val hour = 41.0
+    val rate = 5.0
+    val limitHour= 40.0
+    
+
+    
+    val wage = getWage(hour, rate, limitHour)
+    
+    println("The total wage is $wage")
+}
+
+fun getWage(hour: Double, rate: Double, limitHour: Double): Double {
+    if (hour <= limitHour){
+        return hour*rate
+    }
+    
+    else{
+        
+        return ((hour-limitHour)*2*rate)+ (40*rate)  
+    }
+}
+
+
