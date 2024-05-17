@@ -1,8 +1,0 @@
-fun main(){
-var currentTime: String ="2:39 PM"
-var temperature : Double = 28.3 
-var grade : Char ='A'
-println(currentTime)
-println(temperature)
-println(grade)
-}
